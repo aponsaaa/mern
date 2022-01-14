@@ -1,3 +1,4 @@
- {
-     "mongoURI": "mongodb+srv://aponsa:ramarara@devconnector.u58hk.mongodb.net/DevConnector?retryWrites=true&w=majority"
- }
+{
+  "mongoURI": "mongodb+srv://aponsa:ramarara@devconnector.u58hk.mongodb.net/DevConnector?retryWrites=true&w=majority",
+  "jwtSecret": "mysecrettoken"
+}
