@@ -3,7 +3,6 @@ const connectDB = require('./config/db');
 
 // const users = require('./routes/api/users');
 
-
 const app = express();
 
 // connect DB
@@ -11,9 +10,11 @@ connectDB();
 app.get('/', (req, res) => res.send('API Running'));
 
 // Init Middleware
-app.use(express.json({
-    extented: false
-}));
+app.use(
+  express.json({
+    extented: false,
+  })
+);
 
 // Define Routes
 app.use('/api/users/', require('./routes/api/users'));
