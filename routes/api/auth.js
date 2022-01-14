@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../../middleware/auth');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const config = require('config');
+const { check, validationResult } = require('express-validator');
 
 const User = require('../../models/User');
 // @route   GET api/Auth
@@ -16,18 +20,14 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-// @route   POST api/Users
-// @desc    Register
+// @route   POST api/auth
+// @desc    Authenticate user & get token
 // @access  Public
 router.post(
   '/',
   [
-    check('name', 'Name is required').not().isEmpty(),
     check('email', 'Please include a valid email').isEmail(),
-    check(
-      'password',
-      'Please enter a password with 6 more characters'
-    ).isLength({ min: 6 }),
+    check('password', 'Password is required').exists(),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -35,36 +35,25 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, password } = req.body;
+    const { email, password } = req.body;
 
     try {
-      // See if users exists
+      // See if users Credentials
       let user = await User.findOne({ email });
-      if (user) {
+      if (!user) {
         return res
           .status(400)
-          .json({ errors: [{ msg: 'User already exists' }] });
+          .json({ errors: [{ msg: 'Invalid Credentials' }] });
       }
 
-      // Get users gravatar
-      const avatar = gravatar.url(email, {
-        s: '200',
-        r: 'pg',
-        d: 'mm',
-      });
+      //  Check and Decrypt password
+      const isMatch = await bcrypt.compare(password, user.password);
 
-      user = new User({
-        name,
-        email,
-        avatar,
-        password,
-      });
-
-      // Encrypt password
-      const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(password, salt);
-
-      await user.save();
+      if (!isMatch) {
+        return res
+          .status(400)
+          .json({ errors: [{ msg: 'Invalid Credentials' }] });
+      }
 
       // Return jsonwebtoken
       const payload = {
